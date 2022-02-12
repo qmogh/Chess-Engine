@@ -8,6 +8,7 @@ class Board:
     # QUEEN
     # KING
     # PAWN
+    # TEST
 
 
     def __init__(self):
