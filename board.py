@@ -12,7 +12,8 @@ class Board:
 
 
     def __init__(self):
-        pass
+        self.bitboards = np.array()
+        
         self.white_rook_bitboard = self.create_empty_bitmap()
         self.white_king_bitboard = self.create_empty_bitmap()
         self.white_bishop_bitboard = self.create_empty_bitmap()
@@ -46,7 +47,7 @@ class Board:
 
 
     def create_empty_bitmap(self):
-        return 64 *[0]
+        return np.zeroes(64)
 
     def initialize_pieces(self):
         self.white_rook_bitboard[0] = 1
