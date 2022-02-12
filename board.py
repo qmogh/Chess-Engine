@@ -12,8 +12,7 @@ class Board:
 
 
     def __init__(self):
-        self.bitboards = np.array()
-        
+       
         self.white_rook_bitboard = self.create_empty_bitmap()
         self.white_king_bitboard = self.create_empty_bitmap()
         self.white_bishop_bitboard = self.create_empty_bitmap()
@@ -29,25 +28,32 @@ class Board:
         self.black_knight_bitboard = self.create_empty_bitmap()
         self.black_queen_bitboard = self.create_empty_bitmap()
        
+        self.bitboards = np.vstack(
+            (self.white_rook_bitboard,
+            self.white_knight_bitboard,
+            self.white_bishop_bitboard,
+            self.white_queen_bitboard,
+            self.white_king_bitboard,
+
+            self.black_rook_bitboard,
+            self.black_knight_bitboard,
+            self.black_bishop_bitboard,
+            self.black_queen_bitboard,
+            self.black_king_bitboard,)
+        )
+
         self.initialize_pieces()
 
-    def get_bitboard_state(self):
-        return self.white_rook_bitboard \
-            & self.white_king_bitboard \
-            & self.white_pawn_bitboard \
-            & self.white_bishop_bitboard \
-            & self.white_knight_bitboard \
-            & self.white_queen_bitboard \
-            & self.black_king_bitboard \
-            & self.black_pawn_bitboard \
-            & self.black_bishop_bitboard \
-            & self.black_knight_bitboard \
-            & self.black_queen_bitboard \
-
+    def update_bitboard_state(self):
+        result = np.zeros(64, "byte")
+        for board in self.bitboards:
+            result = np.bitwise_or(board, result, dtype = "byte")
+        self.bitboards = result
+        
 
 
     def create_empty_bitmap(self):
-        return np.zeroes(64)
+        return np.zeros(64, dtype="byte") 
 
     def initialize_pieces(self):
         self.white_rook_bitboard[0] = 1
