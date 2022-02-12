@@ -31,7 +31,7 @@ class Board:
         self.initialize_pieces()
 
 
-        self.bitboards = np.vstack(
+        self.occupied_squares_bitboard = np.vstack(
             (self.white_rook_bitboard,
             self.white_knight_bitboard,
             self.white_bishop_bitboard,
@@ -48,15 +48,19 @@ class Board:
         )
 
         
-    def update_bitboard_state(self):
+    def update_occupied_squares_bitboard(self):
         result = np.zeros(64, "byte")
-        for board in self.bitboards:
+        for board in self.occupied_squares_bitboard:
             result = np.bitwise_or(board, result, dtype = "byte")
-        self.bitboards = result
-        
-    def pretty_print_bitboard(self):
+        self.occupied_squares_bitboard = result
+
+    def get_empty_squares(self):
+           return np.invert(self.occupied_squares_bitboard)
+
+    @staticmethod
+    def pretty_print_bitboard(bitboard):
         val = ''
-        for i, square in enumerate(self.bitboards):
+        for i, square in enumerate(bitboard):
             if not i % 8:
                 val += '\n'
             if square:
@@ -65,7 +69,7 @@ class Board:
             val += '-'
         print(val)
 
-
+    
 
 
 
@@ -73,8 +77,14 @@ class Board:
         return np.zeros(64, dtype="byte") 
 
     def initialize_pieces(self):
-        self.white_rook_bitboard[0] = 1
-        self.white_rook_bitboard[7] = 1
+        for i in [0, 7]:
+            self.white_rook_bitboard[i] = 1
+
+        for i in [1, 6]:
+            self.white_knight_bitboard[1] = 1
+
+        
+
         self.white_knight_bitboard[1] = 1
         self.white_knight_bitboard[6]=1
         self.white_bishop_bitboard[2] = 1
