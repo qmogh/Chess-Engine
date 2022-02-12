@@ -54,8 +54,8 @@ class Board:
             result = np.bitwise_or(board, result, dtype = "byte")
         self.occupied_squares_bitboard = result
 
-    def get_empty_squares(self):
-           return np.invert(self.occupied_squares_bitboard)
+    def get_empty_squares_bitboard(self):
+           return 1 - self.occupied_squares_bitboard
 
     @staticmethod
     def pretty_print_bitboard(bitboard):
