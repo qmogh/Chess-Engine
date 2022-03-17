@@ -1,18 +1,9 @@
 import numpy as np
 
-from bitboard_helpers import make_empty_uint64_bitmap, set_bit, generate_knight_attack_bb_from_square, pprint_bb
-from constants import Piece, File, Rank, LIGHT_SQUARES, DARK_SQUARES
-
-BOARD_SIZE = 8
-BOARD_SQUARES = BOARD_SIZE ** 2
-
-
-def _make_knight_attack_bbs():
-    # map of square => bitboard
-    knight_attack_map = {}
-    for i in range(BOARD_SQUARES):
-        knight_attack_map[i] = generate_knight_attack_bb_from_square(i)
-    return knight_attack_map
+from engine.bitboard_helpers import make_uint64, set_bit, make_knight_attack_bbs, make_king_attack_bbs, \
+    make_white_pawn_attack_bbs, make_black_pawn_attack_bbs, make_diag_attack_bbs, \
+    make_rook_attack_bbs, make_white_pawn_motion_bbs, make_black_pawn_motion_bbs, make_queen_attack_bbs
+from engine.constants import Piece, Color, File
 
 
 class Board:
@@ -20,25 +11,34 @@ class Board:
     def __init__(self):
 
         # white piece groups
-        self.white_R_bb = make_empty_uint64_bitmap()
-        self.white_K_bb = make_empty_uint64_bitmap()
-        self.white_B_bb = make_empty_uint64_bitmap()
-        self.white_P_bb = make_empty_uint64_bitmap()
-        self.white_N_bb = make_empty_uint64_bitmap()
-        self.white_Q_bb = make_empty_uint64_bitmap()
+        self.white_R_bb = make_uint64()
+        self.white_K_bb = make_uint64()
+        self.white_B_bb = make_uint64()
+        self.white_P_bb = make_uint64()
+        self.white_N_bb = make_uint64()
+        self.white_Q_bb = make_uint64()
 
         # black piece groups
-        self.black_R_bb = make_empty_uint64_bitmap()
-        self.black_K_bb = make_empty_uint64_bitmap()
-        self.black_B_bb = make_empty_uint64_bitmap()
-        self.black_P_bb = make_empty_uint64_bitmap()
-        self.black_N_bb = make_empty_uint64_bitmap()
-        self.black_Q_bb = make_empty_uint64_bitmap()
+        self.black_R_bb = make_uint64()
+        self.black_K_bb = make_uint64()
+        self.black_B_bb = make_uint64()
+        self.black_P_bb = make_uint64()
+        self.black_N_bb = make_uint64()
+        self.black_Q_bb = make_uint64()
 
         self.init_pieces()
 
         # static bitboards
-        self.knight_bbs = _make_knight_attack_bbs()
+        self.knight_attack_bbs = make_knight_attack_bbs()
+        self.bishop_attack_bbs = make_diag_attack_bbs()
+        self.king_attack_bbs = make_king_attack_bbs()
+        self.rook_attack_bbs = make_rook_attack_bbs()
+        self.queen_attack_bbs = make_queen_attack_bbs()
+
+        self.white_pawn_attack_bbs = make_white_pawn_attack_bbs()
+        self.black_pawn_attack_bbs = make_black_pawn_attack_bbs()
+        self.white_pawn_motion_bbs = make_white_pawn_motion_bbs()
+        self.black_pawn_motion_bbs = make_black_pawn_motion_bbs()
 
     # -------------------------------------------------------------
     #  BITBOARD ACCESS: PIECE LOCATIONS
@@ -60,133 +60,29 @@ class Board:
     def occupied_squares_bb(self):
         return self.white_pieces_bb | self.black_pieces_bb
 
-    # -------------------------------------------------------------
-    #  BITBOARD ACCESS: BOARD REGIONS
-    # -------------------------------------------------------------
-
     @property
-    def queenside_bb(self):
-        return self.file_a_bb | self.file_b_bb | self.file_c_bb | self.file_d_bb
-
-    @property
-    def kingside_bb(self):
-        return self.file_e_bb | self.file_f_bb | self.file_g_bb | self.file_h_bb
-
-    @property
-    def center_files_bb(self):
-        return self.file_c_bb | self.file_d_bb | self.file_e_bb | self.file_f_bb
-
-    @property
-    def flanks_bb(self):
-        return self.file_a_bb | self.file_h_bb
-
-    @property
-    def center_squares_bb(self):
-        return (self.file_e_bb | self.file_d_bb) & (self.rank_4_bb | self.rank_5_bb)
-
-    @property
-    def light_squares_bb(self):
-        return np.uint64(LIGHT_SQUARES)
-
-    @property
-    def dark_squares_bb(self):
-        return np.uint64(DARK_SQUARES)
-
-    # -------------------------------------------------------------
-    #  BITBOARD ACCESS: RANKS AND FILES
-    # -------------------------------------------------------------
-
-    @property
-    def file_a_bb(self):
-        return np.uint64(File.hexA)
-
-    @property
-    def file_b_bb(self):
-        return np.uint64(File.hexB)
-
-    @property
-    def file_c_bb(self):
-        return np.uint64(File.hexC)
-
-    @property
-    def file_d_bb(self):
-        return np.uint64(File.hexD)
-
-    @property
-    def file_e_bb(self):
-        return np.uint64(File.hexE)
-
-    @property
-    def file_f_bb(self):
-        return np.uint64(File.hexF)
-
-    @property
-    def file_g_bb(self):
-        return np.uint64(File.hexG)
-
-    @property
-    def file_h_bb(self):
-        return np.uint64(File.hexH)
-
-    @property
-    def rank_1_bb(self):
-        return np.uint64(Rank.hex1)
-
-    @property
-    def rank_2_bb(self):
-        return np.uint64(Rank.hex2)
-
-    @property
-    def rank_3_bb(self):
-        return np.uint64(Rank.hex3)
-
-    @property
-    def rank_4_bb(self):
-        return np.uint64(Rank.hex4)
-
-    @property
-    def rank_5_bb(self):
-        return np.uint64(Rank.hex5)
-
-    @property
-    def rank_6_bb(self):
-        return np.uint64(Rank.hex6)
-
-    @property
-    def rank_7_bb(self):
-        return np.uint64(Rank.hex7)
-
-    @property
-    def rank_8_bb(self):
-        return np.uint64(Rank.hex8)
-
-    # -------------------------------------------------------------
-    #  BITBOARD ACCESS: PIECE ATTACKS
-    # -------------------------------------------------------------
-
-    @property
-    def white_P_east_attacks(self):
+    def white_pawn_east_attacks(self):
         # White pawn east attacks are north east (+9) AND NOT the A File
-        return (self.white_P_bb << 9) & (~self.file_a_bb)
+        return (self.white_P_bb << np.uint64(9)) & ~np.uint64(File.hexA)
 
     @property
-    def white_P_west_attacks(self):
+    def white_pawn_west_attacks(self):
         # White pawn west attacks are north west (+7) AND NOT the H File
-        return (self.white_P_bb << 7) & (~self.file_h_bb)
+        return (self.white_P_bb << np.uint64(7)) & ~np.uint64(File.hexH)
 
     @property
     def white_pawn_attacks(self):
-        return self.white_P_east_attacks | self.white_P_west_attacks
+        return self.white_pawn_east_attacks | self.white_pawn_west_attacks
 
     @property
     def black_pawn_east_attacks(self):
         # Black pawn east attacks are south east (-7) AND NOT the A File
-        return (self.white_P_bb >> 7) & (~self.file_a_bb)
+        return (self.black_P_bb >> np.uint64(7)) & ~np.uint64(File.hexA)
 
     @property
     def black_pawn_west_attacks(self):
         # Black pawn west attacks are south west (-9) AND NOT the H File
-        return (self.white_P_bb >> 9) & (~self.file_a_bb)
+        return (self.black_P_bb >> np.uint64(9)) & ~np.uint64(File.hexH)
 
     @property
     def black_pawn_attacks(self):
@@ -228,10 +124,9 @@ class Board:
     #  BOARD UPDATES
     # -------------------------------------------------------------
 
-    def update_position(self, piece_map):
+    def update_position_bitboards(self, piece_map):
         for key, val in piece_map.items():
-
-            # TODO inefficient
+            # TODO: make more efficient by storing and updating the piece group that changed
 
             # White Pieces
             if key == Piece.wP:
@@ -273,7 +168,7 @@ class Board:
             elif key == Piece.bR:
                 self.black_R_bb = np.uint64(0)
                 for bit in val:
-                    self.black_P_bb |= set_bit(self.black_R_bb, np.uint64(bit))
+                    self.black_R_bb |= set_bit(self.black_R_bb, np.uint64(bit))
 
             elif key == Piece.bN:
                 self.black_N_bb = np.uint64(0)
@@ -300,14 +195,38 @@ class Board:
     # -------------------------------------------------------------
 
     def get_bishop_attack_from(self, square):
-        pass
+        return self.bishop_attack_bbs[square]
 
     def get_rook_attack_from(self, square):
-        pass
+        return self.rook_attack_bbs[square]
+
+    def get_queen_attack_from(self, square):
+        return self.queen_attack_bbs[square]
 
     # -------------------------------------------------------------
     #  PAWN MOVEMENTS
     # -------------------------------------------------------------
 
-    def _make_pawn_attack_bbs(self):
-        pass
+    def get_pawn_attack_from(self, color, square):
+        if color is Color.WHITE:
+            return self.white_pawn_attack_bbs[square]
+        return self.black_pawn_attack_bbs[square]
+
+    def get_pawn_movements_from(self, color, square):
+        if color is Color.WHITE:
+            return self.white_pawn_motion_bbs[square]
+        return self.black_pawn_motion_bbs[square]
+
+    # -------------------------------------------------------------
+    #  KNIGHT MOVEMENTS
+    # -------------------------------------------------------------
+
+    def get_knight_attack_from(self, square):
+        return self.knight_attack_bbs[square]
+
+    # -------------------------------------------------------------
+    #  KING MOVEMENTS
+    # -------------------------------------------------------------
+
+    def get_king_attack_from(self, square):
+        return self.king_attack_bbs[square]
