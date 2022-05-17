@@ -9,7 +9,7 @@ class Game:
         self.position = Position()
         self.is_over = False
         self.score = [0, 0]
-
+x
         self.color_to_move = {
             Color.WHITE: "White",
             Color.BLACK: "Black",
